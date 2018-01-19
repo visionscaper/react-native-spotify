@@ -1,9 +1,11 @@
 
 #import "RCTSpotify.h"
+#import <AVFoundation/AVFoundation.h>
 #import <SpotifyAuthentication/SpotifyAuthentication.h>
 #import <SpotifyMetadata/SpotifyMetadata.h>
 #import <SpotifyAudioPlayback/SpotifyAudioPlayback.h>
-#import "SpotifyWebViewController.h"
+#import "RCTSpotifyAuthController.h"
+#import "RCTSpotifyProgressView.h"
 #import "RCTSpotifyConvert.h"
 #import "HelperMacros.h"
 
@@ -14,7 +16,7 @@ NSString* const RCTSpotifyWebAPIDomain = @"com.spotify.web-api";
 #define SPOTIFY_API_BASE_URL @"https://api.spotify.com/"
 #define SPOTIFY_API_URL(endpoint) [NSURL URLWithString:NSString_concat(SPOTIFY_API_BASE_URL, endpoint)]
 
-@interface RCTSpotify() <SPTAudioStreamingDelegate, SPTAudioStreamingPlaybackDelegate, SpotifyWebViewDelegate>
+@interface RCTSpotify() <SPTAudioStreamingDelegate, SPTAudioStreamingPlaybackDelegate>
 {
 	BOOL initialized;
 	SPTAuth* _auth;
@@ -23,9 +25,10 @@ NSString* const RCTSpotifyWebAPIDomain = @"com.spotify.web-api";
 	NSDictionary* _options;
 	NSNumber* _cacheSize;
 	
-	void(^_authControllerResponse)(BOOL loggedIn, NSError* error);
 	NSMutableArray<void(^)(BOOL, NSError*)>* _loginPlayerResponses;
 	NSMutableArray<void(^)(NSError*)>* _logoutResponses;
+	
+	NSString* _audioSessionCategory;
 }
 +(NSError*)errorWithCode:(RCTSpotifyErrorCode)code description:(NSString*)description;
 +(NSError*)errorWithCode:(RCTSpotifyErrorCode)code description:(NSString*)description fields:(NSDictionary*)fields;
@@ -113,6 +116,37 @@ NSString* const RCTSpotifyWebAPIDomain = @"com.spotify.web-api";
 	return [scopes containsObject:@"streaming"];
 }
 
+-(void)activateAudioSession
+{
+	AVAudioSession* audioSession = [AVAudioSession sharedInstance];
+	NSError* error = nil;
+	if(![_audioSessionCategory isEqualToString:audioSession.category])
+	{
+		[audioSession setCategory:_audioSessionCategory error:&error];
+		if(error != nil)
+		{
+			NSLog(@"Error setting spotify audio session category: %@", error);
+		}
+	}
+	error = nil;
+	[audioSession setActive:YES error:&error];
+	if(error != nil)
+	{
+		NSLog(@"Error setting spotify audio session active: %@", error);
+	}
+}
+
+-(void)deactivateAudioSession
+{
+	AVAudioSession* audioSession = [AVAudioSession sharedInstance];
+	NSError* error = nil;
+	[audioSession setActive:NO error:&error];
+	if(error != nil)
+	{
+		NSLog(@"Error setting spotify audio session inactive: %@", error);
+	}
+}
+
 
 
 #pragma mark - React Native functions
@@ -142,7 +176,6 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options completion:(RCTResponseSende
 	_auth = [SPTAuth defaultInstance];
 	_player = [SPTAudioStreamingController sharedInstance];
 	_cacheSize = @(1024 * 1024 * 64);
-	_authControllerResponse = nil;
 	_loginPlayerResponses = [NSMutableArray array];
 	_logoutResponses = [NSMutableArray array];
 	
@@ -157,6 +190,17 @@ RCT_EXPORT_METHOD(initialize:(NSDictionary*)options completion:(RCTResponseSende
 	if(cacheSize!=nil)
 	{
 		_cacheSize = cacheSize;
+	}
+	
+	NSDictionary* iosOptions = options[@"ios"];
+	if(iosOptions == nil)
+	{
+		iosOptions = @{};
+	}
+	_audioSessionCategory = iosOptions[@"audioSessionCategory"];
+	if(_audioSessionCategory == nil)
+	{
+		_audioSessionCategory = AVAudioSessionCategoryPlayback;
 	}
 	
 	[self logBackInIfNeeded:^(BOOL loggedIn, NSError* error) {
@@ -300,62 +344,37 @@ RCT_EXPORT_METHOD(login:(RCTResponseSenderBlock)completion)
 {
 	//do UI logic on main thread
 	dispatch_async(dispatch_get_main_queue(), ^{
-		SpotifyWebViewController* authController = [[SpotifyWebViewController alloc] initWithURL:_auth.spotifyWebAuthenticationURL];
-		authController.title = @"Log into Spotify";
-		authController.delegate = self;
-		UIViewController* rootController = [UIApplication sharedApplication].keyWindow.rootViewController;
-		if(rootController == nil)
-		{
-			//no root view controller to present on
-			if(completion)
-			{
-				completion(@[ @NO, @{@"description":@"can't login when not in foreground"} ]);
-			}
-		}
-		else
-		{
-			__weak RCTSpotify* _self = self;
+		RCTSpotifyAuthController* authController = [[RCTSpotifyAuthController alloc] initWithAuth:_auth];
+		
+		__weak RCTSpotifyAuthController* weakAuthController = authController;
+		authController.completion = ^(BOOL authenticated, NSError* error) {
+			RCTSpotifyAuthController* authController = weakAuthController;
 			
-			if(_authControllerResponse != nil)
+			if(!authenticated)
 			{
-				if(completion)
-				{
-					completion(@[ @NO, [RCTSpotifyConvert NSError:[RCTSpotify errorWithCode:RCTSpotifyErrorCodeConflictingCallbacks description:@"Cannot call login while login is already being called"]] ]);
-				}
+				[authController.presentingViewController dismissViewControllerAnimated:YES completion:^{
+					if(completion != nil)
+					{
+						completion(@[ @NO, [NSNull null] ]);
+					}
+				}];
 				return;
 			}
 			
-			//wait for handleAuthURL:
-			// or spotifyWebControllerDidCancelLogin
-			_authControllerResponse = ^(BOOL loggedIn, NSError* error){
-				authController.view.userInteractionEnabled = NO;
-				if(!loggedIn)
-				{
-					if(authController.presentingViewController != nil)
-					{
-						[authController.presentingViewController dismissViewControllerAnimated:YES completion:nil];
-					}
-					if(completion)
-					{
-						completion(@[ @NO, [RCTSpotifyConvert NSError:error] ]);
-					}
-					return;
-				}
-				[_self initializePlayerIfNeeded:^(BOOL loggedIn, NSError* error) {
-					dispatch_async(dispatch_get_main_queue(), ^{
-						if(authController.presentingViewController != nil)
-						{
-							[authController.presentingViewController dismissViewControllerAnimated:YES completion:nil];
-						}
+			[self initializePlayerIfNeeded:^(BOOL loggedIn, NSError* error) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[authController.presentingViewController dismissViewControllerAnimated:YES completion:^{
 						if(completion)
 						{
 							completion(@[ [NSNumber numberWithBool:loggedIn], [RCTSpotifyConvert NSError:error] ]);
 						}
-					});
-				}];
-			};
-			[rootController presentViewController:authController animated:YES completion:nil];
-		}
+					}];
+				});
+			}];
+		};
+		
+		UIViewController* topViewController = [RCTSpotifyAuthController topViewController];
+		[topViewController presentViewController:authController animated:YES completion:nil];
 	});
 }
 
@@ -418,35 +437,13 @@ RCT_EXPORT_METHOD(isLoggedInAsync:(RCTResponseSenderBlock)completion)
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(handleAuthURL:(NSString*)urlString)
 {
-	NSURL* url = [NSURL URLWithString:urlString];
-	if([_auth canHandleURL:url])
-	{
-		[_auth handleAuthCallbackWithTriggeredAuthURL:url callback:^(NSError* error, SPTSession* session){
-			if(session!=nil)
-			{
-				_auth.session = session;
-			}
-			if(_authControllerResponse != nil)
-			{
-				void(^response)(BOOL, NSError*) = _authControllerResponse;
-				_authControllerResponse = nil;
-				if(error!=nil)
-				{
-					response(NO, error);
-				}
-				else
-				{
-					response(YES, nil);
-				}
-			}
-		}];
-		return @YES;
-	}
+	// unused function
 	return @NO;
 }
 
 RCT_EXPORT_METHOD(handleAuthURLAsync:(NSString*)url completion:(RCTResponseSenderBlock)completion)
 {
+	// unused function
 	return completion(@[ [self handleAuthURL:url] ]);
 }
 
@@ -989,20 +986,6 @@ RCT_EXPORT_METHOD(getTracksAudioFeatures:(NSArray<NSString*>*)trackIDs options:(
 
 
 
-#pragma mark - SpotifyWebViewDelegate
-
--(void)spotifyWebControllerDidCancel:(SpotifyWebViewController*)webController
-{
-	if(_authControllerResponse != nil)
-	{
-		void(^response)(BOOL, NSError*) = _authControllerResponse;
-		_authControllerResponse = nil;
-		response(NO, nil);
-	}
-}
-
-
-
 #pragma mark - SPTAudioStreamingDelegate
 
 -(void)audioStreamingDidLogin:(SPTAudioStreamingController*)audioStreaming
@@ -1048,6 +1031,22 @@ RCT_EXPORT_METHOD(getTracksAudioFeatures:(NSArray<NSString*>*)trackIDs options:(
 	for(void(^response)(NSError*) in logoutResponses)
 	{
 		response(nil);
+	}
+}
+
+
+
+#pragma mark - SPTAudioStreamingPlaybackDelegate
+
+-(void)audioStreaming:(SPTAudioStreamingController*)audioStreaming didChangePlaybackStatus:(BOOL)isPlaying
+{
+	if(isPlaying)
+	{
+		[self activateAudioSession];
+	}
+	else
+	{
+		[self deactivateAudioSession];
 	}
 }
 
