@@ -162,7 +162,7 @@ import Spotify from '@lufinkey/react-native-spotify';
 
 * **initialize**( *options*, ( *loggedIn*, *error*? ) => {} )
 
-	Initializes the Spotify module and resumes a logged in session if there is one.
+	Initializes the Spotify module and resumes a logged in session if there is one. This must be the first method you call when using this module.
 	
 	* *Parameters*
 		* **options** - an object with options to pass to the Spotify Module
@@ -170,7 +170,7 @@ import Spotify from '@lufinkey/react-native-spotify';
 			* **redirectURL** - The redirect URL to use when you've finished logging in. You NEED to set this URL for your application [here](https://developer.spotify.com/my-applications), otherwise the login screen will not close
 			* **sessionUserDefaultsKey** - The preference key to use to store session data for this module
 			* **scopes** - An array of scopes to use in the application. A list of scopes can be found [here](https://developer.spotify.com/web-api/using-scopes/)
-			* **tokenSwapURL** - The URL to use to swap an authentication code for an access token
+			* **tokenSwapURL** - The URL to use to swap an authentication code for an access token (see [Token swap and refresh](#token-swap-and-refresh) section for more info)
 			* **tokenRefreshURL** - The URL to use to get a new access token from a refresh token
   		
 		* **loggedIn** - A boolean indicating whether or not a session was automatically logged back in
@@ -256,18 +256,18 @@ import Spotify from '@lufinkey/react-native-spotify';
 	
 	* *Returns*
 	
-		* An *Auth* object
+		* An *Auth* object, or *null* if not logged in
 
 
 
 
-* **getAuthAsync**( ( *auth* ) => {} )
+* **getAuthAsync**( ( *auth*? ) => {} )
 
 	Gives information about authentication data, but passes the result to a callback rather than returning it.
 	
 	* *Parameters*
 	
-		* **auth** - An *Auth* object
+		* **auth** - An *Auth* object, or *null* if not logged in
 
 
 
@@ -678,3 +678,22 @@ import Spotify from '@lufinkey/react-native-spotify';
 		* **result** - The request result object. An example response can be seen [here](https://developer.spotify.com/web-api/get-several-audio-features/#example)
 		
 		* **error** - An error object if an error occurred, or *null* if no error occurred
+
+
+### Token swap and refresh
+
+Token swap URL is used to swap authentication code provided by Spotify API for access and refresh tokens.  
+Token refresh URL is used to get new access tokens for the user using existing refresh token.  
+Both URLs are queried using POST methods with parameters sent as `application/x-www-form-urlencoded`.  
+You can find the example server implementation in [`example-server`](./example-server) folder.
+
+Refresh tokens are part of [OAuth standard](https://tools.ietf.org/html/rfc6749#section-1.5). If you are not familiar with them, [Understanding Refresh Tokens](https://auth0.com/learn/refresh-tokens/) can give you a basic idea on how they work.  
+
+
+
+## Contributing / Opening Issues
+
+If you would like to make a pull request, fork from and merge into the *dev* branch only.
+
+Please do not open issues about getting the module to work unless you have tried using both the example app and the example token swap server.
+
