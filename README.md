@@ -39,7 +39,7 @@ allprojects {
 ...
 ```
 
-Edit `android/settings.gradle` and make sure that the project linkage looks correct. (ensure it says @lufinkey_ and not @lufinkey/. This is a bug with the `react-native link` command):
+Edit `android/settings.gradle` and make sure that the project linkage looks correct. (ensure it says `@lufinkey_` and not `@lufinkey/`. This is a bug with the `react-native link` command):
 
 ```gradle
 ...
@@ -65,7 +65,7 @@ packagingOptions {
 ...
 ```
 
-Also edit `android/app/build.gradle` and ensure that the project linkage looks correct. (ensure it says @lufinkey_ and not @lufinkey/. This is a bug with the `react-native link` command):
+Also edit `android/app/build.gradle` and ensure that the project linkage looks correct. (ensure it says `@lufinkey_` and not `@lufinkey/`. This is a bug with the `react-native link` command):
 
 ```gradle
 ...
@@ -73,6 +73,8 @@ dependencies {
     compile project(':@lufinkey_react-native-spotify')
 ...
 ```
+
+**note** - If you re-run `react-native link`, it will think that the module hasn't been linked yet since you've replaced the `/` with a `_`, and will re-add the linkages. You'll need to manually remove them again from `android/settings.gradle`, `android/app/build.gradle`, and `android/app/src/main/java/.../MainApplication.java`. This is a bug with react-native that hasn't been fixed yet.
 
 If you have issues linking the module, please check that gradle is updated to the latest version and that your project is synced.
 
