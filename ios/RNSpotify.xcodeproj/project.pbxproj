@@ -105,8 +105,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				B6B49C20255DD50200CF1C97 /* AudioFilters */,
 				B6F2BFEE255D5F32009AE116 /* RNSpotify-Bridging-Header.h */,
-				B6F2BFED255D5EDC009AE116 /* AudioFilters */,
 				B6F2BFEA255D5EC5009AE116 /* EQCoreAudioController.h */,
 				B6F2BFE9255D5EC5009AE116 /* EQCoreAudioController.m */,
 				A0CB1CFF1FB4D718009989EA /* HelperMacros.h */,
@@ -159,7 +159,7 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
-		B6F2BFED255D5EDC009AE116 /* AudioFilters */ = {
+		B6B49C20255DD50200CF1C97 /* AudioFilters */ = {
 			isa = PBXGroup;
 			children = (
 				B6F2BFF1255D5F33009AE116 /* AudioFilter.swift */,
@@ -167,7 +167,7 @@
 				B6F2BFF2255D5F33009AE116 /* FirstOrderHighpassFilterSimulator.swift */,
 				B6F2BFF0255D5F33009AE116 /* HighpassFilter.swift */,
 			);
-			path = AudioFilters;
+			name = AudioFilters;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -323,7 +323,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -370,7 +370,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -396,8 +396,7 @@
 				);
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherit)";
-				"OTHER_LDFLAGS[arch=*]" = "-objc";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RNSpotify;
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNSpotify-Bridging-Header.h";
@@ -425,8 +424,7 @@
 				);
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherit)";
-				"OTHER_LDFLAGS[arch=*]" = "-objc";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RNSpotify;
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNSpotify-Bridging-Header.h";

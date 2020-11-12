@@ -12,10 +12,9 @@
 #import "RNSpotifyUtils.h"
 #import "HelperMacros.h"
 
-#import "RNSpotify-Swift.h"
-
 #import "EQCoreAudioController.h"
 
+#import "RNSpotify-Swift.h"
 
 #define SPOTIFY_API_BASE_URL @"https://api.spotify.com/"
 #define SPOTIFY_API_URL(endpoint) [NSURL URLWithString:NSString_concat(SPOTIFY_API_BASE_URL, endpoint)]
