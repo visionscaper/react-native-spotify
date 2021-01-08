@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 MODULES=`sed -n -e '/path/,/url/p' .gitmodules | sed 'N;s/\\n/\\$$$/'`
 echo "$MODULES" | while IFS= read -r line; do
