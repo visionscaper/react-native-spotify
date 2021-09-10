@@ -1,13 +1,13 @@
 {
-  "name": "rn-spotify-sdk",
+  "name": "@listenalphabeats/rn-spotify-sdk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lufinkey/react-native-spotify.git"
+    "url": "https://github.com/listenalphabeats/react-native-spotify.git"
   },
   "bugs": {
-    "url": "https://github.com/lufinkey/react-native-spotify/issues"
+    "url": "https://github.com/listenalphabeats/react-native-spotify/issues"
   },
-  "version": "1.2.15",
+  "version": "2.0.1",
   "description": "A react-native module for the Spotify SDK",
   "author": "lufinkey",
   "nativePackage": true,
@@ -25,8 +25,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "git submodule update --init --recursive",
-    "postinstall": "./postinstall.sh"
+    "prepublishOnly": "git submodule update --init --recursive"
   },
   "peerDependencies": {
     "react-native": "0.63.2"

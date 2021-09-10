@@ -973,7 +973,8 @@ RCT_EXPORT_METHOD(seek:(double)position resolve:(RCTPromiseResolveBlock)resolve 
 													 httpMethod:method
 														 values:params
 												valueBodyIsJSON:jsonBody
-										  sendDataAsQueryString:!jsonBody];
+										  sendDataAsQueryString:!jsonBody,
+											error: &error];
 		// handle request params error
 		if(error != nil) {
 			[completion reject:[RNSpotifyError errorWithNSError:error]];
