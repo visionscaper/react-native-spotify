@@ -209,6 +209,8 @@ public class RNSpotifyModule extends ReactContextBaseJavaModule implements Playe
 					if(loggedIn) {
 						sendEvent("login", Convert.fromSessionData(auth.getSession()));
 					}
+				} else {
+					promise.resolve(initialized);
 				}
 			}
 		}, true);
