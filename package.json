@@ -28,10 +28,10 @@
     "prepublishOnly": "git submodule update --init --recursive"
   },
   "peerDependencies": {
-    "react-native": "0.63.2"
+    "react-native": "^0.67.3"
   },
   "dependencies": {
-    "react-native-events": "^1.0.15"
+    "react-native-events": "^1.0.21"
   },
   "devDependencies": {}
 }
