@@ -42,11 +42,18 @@
 		_options = options;
 		_xssState = [NSUUID UUID].UUIDString;
 		
-		self.navigationBar.barTintColor = [UIColor blackColor];
-		self.navigationBar.tintColor = [UIColor whiteColor];
-		self.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor whiteColor]};
 		self.view.backgroundColor = [UIColor whiteColor];
 		self.modalPresentationStyle = UIModalPresentationFormSheet;
+
+		// Disable close on swipe down
+		self.modalInPresentation = YES;
+
+		// Always present Cancel button
+		self.navigationBar.backgroundColor = [UIColor whiteColor];
+		self.navigationBar.barTintColor = [UIColor whiteColor];
+		self.navigationBar.tintColor = [UIColor blackColor];
+		self.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor blackColor]};
+		
 		
 		if(options.loginUserAgent != nil) {
 			_webController.webView.customUserAgent = options.loginUserAgent;
